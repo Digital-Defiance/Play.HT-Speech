@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Runtime.InteropServices;
+using System.Net.Http.Json;
+using System.Text;
 
 namespace TTSPlay.HT
 {
@@ -71,7 +73,36 @@ namespace TTSPlay.HT
 
         public async Task Speak(string text, string selectedDeviceId)
         {
-            MessageBox.Show("Would have spoken \"" + text + "\" to deviceId=\"" + selectedDeviceId + "\"");
+            var selectedVoice = Properties.Settings.Default.SelectedVoice;
+            var requestObject = new TTSRequest
+            {
+                Text = text,
+                Voice = selectedVoice,
+                OutputFormat = "wav",
+                VoiceEngine = "PlayHT2.0-turbo",
+                SampleRate = 44100,
+                Speed = 1
+            };
+            var options = new RestClientOptions("https://api.play.ht/api/v2/tts/stream");
+            var client = new RestClient(options);
+            var request = new RestRequest();
+            request.Method = Method.Post;
+            request.AddHeader("accept", "audio/wav");
+            request.AddHeader("content-type", "application/json");
+            request.AddHeader("AUTHORIZATION", Properties.Settings.Default.APISecret);
+            request.AddHeader("X-USER-ID", Properties.Settings.Default.APIUser);
+            request.AddJsonBody(requestObject);
+            MessageBox.Show("Would have spoken \"" + text + "\" to deviceId=\"" + selectedDeviceId + "\" using voice \"" + selectedVoice + "\"");
+            try
+            {
+                var response = await client.PostAsync(request);
+                // response.content is mp3 audio
+
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         private void TxtContent_KeyDown(object? sender, KeyEventArgs e)

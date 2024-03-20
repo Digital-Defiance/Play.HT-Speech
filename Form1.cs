@@ -6,12 +6,16 @@ using System.Text.Json;
 using System.Runtime.InteropServices;
 using System.Net.Http.Json;
 using System.Text;
+using NAudio.CoreAudioApi;
+using System.Text.RegularExpressions;
 
 namespace TTSPlay.HT
 {
     public partial class Form1 : Form
     {
         const int SW_RESTORE = 9;  // Command to restore the window
+
+        private MMDeviceEnumerator _deviceEnumerator;
 
         public Form1()
         {
@@ -71,6 +75,25 @@ namespace TTSPlay.HT
             settings.ShowDialog();
         }
 
+        public Guid GetSelectedDeviceGuid(string selectedDeviceId)
+        {
+            string pattern = @"\{[^{}]*\}\.\{([^{}]*)\}";
+
+            // Create a regex object with the pattern
+            Regex regex = new Regex(pattern);
+
+            // Match the input string with the regex pattern
+            Match match = regex.Match(selectedDeviceId);
+
+            // If a match is found, extract the content of the second captured group
+            if (match.Success)
+            {
+                string secondContent = match.Groups[1].Value;
+                return new Guid(secondContent);
+            }
+            throw new Exception("Could not extract guid from device id: " + selectedDeviceId);
+        }
+
         public async Task Speak(string text, string selectedDeviceId)
         {
             var selectedVoice = Properties.Settings.Default.SelectedVoice;
@@ -92,16 +115,42 @@ namespace TTSPlay.HT
             request.AddHeader("AUTHORIZATION", Properties.Settings.Default.APISecret);
             request.AddHeader("X-USER-ID", Properties.Settings.Default.APIUser);
             request.AddJsonBody(requestObject);
-            MessageBox.Show("Would have spoken \"" + text + "\" to deviceId=\"" + selectedDeviceId + "\" using voice \"" + selectedVoice + "\"");
+            //MessageBox.Show("Would have spoken \"" + text + "\" to deviceId=\"" + selectedDeviceId + "\" using voice \"" + selectedVoice + "\"");
             try
             {
+                var directSoundOut = new DirectSoundOut(GetSelectedDeviceGuid(selectedDeviceId));
+
                 var response = await client.PostAsync(request);
                 // response.content is mp3 audio
+                if (response.IsSuccessful)
+                {
+                    // Get audio bytes from response
+                    var audioBytes = response.RawBytes;
+                    // create a temporary file
+                    string tempFilePath = Path.GetTempFileName();
+                    File.WriteAllBytes(tempFilePath, audioBytes);
 
+                    // Play audio to the desired device using NAudio
+                    // Initialize the WaveFileReader with the audio file
+                    using (var waveStream = new WaveFileReader(tempFilePath))
+                    {
+                        // Initialize and play the audio
+                        directSoundOut.Init(new WaveChannel32(waveStream));
+                        directSoundOut.Volume = 1.0f;
+                        directSoundOut.Play();
+
+                        // Wait for playback to finish
+                        while (directSoundOut.PlaybackState == PlaybackState.Playing)
+                        {
+                            await Task.Delay(100);
+                        }
+                    }
+                    File.Delete(tempFilePath);
+                }
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message);
             }
         }
 

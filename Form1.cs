@@ -16,6 +16,17 @@ namespace TTSPlay.HT
             InitializeComponent();
             txtContent.KeyDown += TxtContent_KeyDown;
             Resize += Form1_Resize;
+            cmbVoices.SelectedIndexChanged += CmbVoices_SelectedIndexChanged;
+        }
+
+        private void CmbVoices_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (cmbVoices.SelectedItem != null)
+            {
+                Voice selectedVoice = (Voice)cmbVoices.SelectedItem;
+                Properties.Settings.Default.SelectedVoice = selectedVoice.Id;
+                Properties.Settings.Default.Save();
+            }
         }
 
         [DllImport("user32.dll")]
@@ -137,6 +148,10 @@ namespace TTSPlay.HT
                     cmbVoices.DisplayMember = "Name";
                     cmbVoices.ValueMember = "Id";
                     cmbVoices.DataSource = voices;
+                    if (Properties.Settings.Default.SelectedVoice.Length > 0)
+                    {
+                        cmbVoices.SelectedValue = Properties.Settings.Default.SelectedVoice;
+                    }
                 }
                 else
                 {

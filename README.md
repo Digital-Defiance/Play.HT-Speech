@@ -1,6 +1,6 @@
-1) On [https://play.ht/studio/voice-cloning](Play.ht), you need to clone a voice
+1) On [Play.ht](https://play.ht/studio/voice-cloning), you need to clone a voice
 ![image](https://github.com/Digital-Defiance/Play.HT-Speech/assets/3766240/0c55fc0b-0f7f-45ef-aef1-cdd4f1f1c5ee)
-2) On [https://play.ht/studio/api-access](Play.ht), you need an account with API access enabled.
+2) On [Play.ht](https://play.ht/studio/api-access), you need an account with API access enabled.
 ![image](https://github.com/Digital-Defiance/Play.HT-Speech/assets/3766240/7dd146b0-765f-497b-831f-c64a1b14077d)
 3) Run the App
 ![image](https://github.com/Digital-Defiance/Play.HT-Speech/assets/3766240/ef1eda0b-047f-44d6-817f-ebed3f24c924)
